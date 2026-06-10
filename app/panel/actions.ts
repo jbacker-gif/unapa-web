@@ -7,7 +7,15 @@ import { hasSupabaseEnv } from '@/lib/supabase/env'
 import { createClient } from '@/lib/supabase/server'
 
 type ContentType = 'article' | 'event' | 'photo' | 'video'
-type AuthorProfile = { id: string; role: string; full_name: string | null }
+type ManagedContentType = 'articles' | 'events' | 'photos' | 'videos'
+type AuthorProfile = {
+  id: string
+  role: string
+  full_name: string | null
+  phone?: string | null
+  position?: string | null
+  bio?: string | null
+}
 
 function publishedAt(status: string) {
   return status === 'published' ? new Date().toISOString() : null
@@ -59,6 +67,18 @@ async function uploadMedia(file: File | null, folder: string, userId: string) {
 function getFile(formData: FormData, name: string) {
   const value = formData.get(name)
   return value instanceof File ? value : null
+}
+
+function redirectWithPanelError(error: string) {
+  redirect(`/panel?error=${error}`)
+}
+
+function contentPaths() {
+  revalidatePath('/', 'layout')
+  revalidatePath('/noticias')
+  revalidatePath('/eventos')
+  revalidatePath('/galeria')
+  revalidatePath('/panel')
 }
 
 export async function createContent(formData: FormData) {
@@ -159,9 +179,86 @@ export async function createContent(formData: FormData) {
     if (error) redirect('/panel?error=save')
   }
 
-  revalidatePath('/', 'layout')
-  revalidatePath('/noticias')
-  revalidatePath('/eventos')
-  revalidatePath('/galeria')
+  contentPaths()
   redirect('/panel?saved=1')
+}
+
+export async function updateProfile(formData: FormData) {
+  const { supabase, user } = await requireAuthor()
+  const fullName = String(formData.get('full_name') ?? '').trim()
+  const phone = String(formData.get('phone') ?? '').trim()
+  const position = String(formData.get('position') ?? '').trim()
+  const bio = String(formData.get('bio') ?? '').trim()
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: fullName || null,
+      phone: phone || null,
+      position: position || null,
+      bio: bio || null,
+    })
+    .eq('id', user.id)
+
+  if (error) redirectWithPanelError('profile')
+
+  revalidatePath('/panel')
+  redirect('/panel?profile=1')
+}
+
+export async function updatePassword(formData: FormData) {
+  const { supabase } = await requireAuthor()
+  const password = String(formData.get('password') ?? '')
+  const confirmPassword = String(formData.get('confirm_password') ?? '')
+
+  if (password.length < 8 || password !== confirmPassword) {
+    redirectWithPanelError('password')
+  }
+
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) redirectWithPanelError('password')
+
+  redirect('/panel?password=1')
+}
+
+export async function updateContentStatus(formData: FormData) {
+  const { supabase } = await requireAuthor()
+  const table = String(formData.get('table') ?? '') as ManagedContentType
+  const id = String(formData.get('id') ?? '')
+  const status = String(formData.get('status') ?? '')
+
+  if (!['articles', 'events', 'photos', 'videos'].includes(table) || !id || !['draft', 'published'].includes(status)) {
+    redirectWithPanelError('invalid')
+  }
+
+  const { error } = await supabase
+    .from(table)
+    .update({
+      status,
+      published_at: status === 'published' ? new Date().toISOString() : null,
+    })
+    .eq('id', id)
+
+  if (error) redirectWithPanelError('save')
+
+  contentPaths()
+  redirect('/panel?updated=1')
+}
+
+export async function deleteContent(formData: FormData) {
+  const { supabase } = await requireAuthor()
+  const table = String(formData.get('table') ?? '') as ManagedContentType
+  const id = String(formData.get('id') ?? '')
+
+  if (!['events', 'photos', 'videos'].includes(table) || !id) {
+    redirectWithPanelError('invalid')
+  }
+
+  const { error } = await supabase.from(table).delete().eq('id', id)
+
+  if (error) redirectWithPanelError('delete')
+
+  contentPaths()
+  redirect('/panel?deleted=1')
 }
