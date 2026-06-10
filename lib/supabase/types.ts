@@ -129,19 +129,28 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bio: string | null
           created_at: string
           full_name: string | null
           id: string
+          phone: string | null
+          position: string | null
           role: string
           updated_at: string
         }
         Insert: {
+          bio?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
+          position?: string | null
           role?: string
         }
         Update: {
+          bio?: string | null
           full_name?: string | null
+          phone?: string | null
+          position?: string | null
           role?: string
         }
       }
