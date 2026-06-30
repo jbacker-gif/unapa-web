@@ -6,7 +6,8 @@ export type Article = Database['public']['Tables']['articles']['Row']
 export type Event = Database['public']['Tables']['events']['Row']
 export type Photo = Database['public']['Tables']['photos']['Row']
 export type Video = Database['public']['Tables']['videos']['Row']
-export type ManagedContentType = 'articles' | 'events' | 'photos' | 'videos'
+export type Document = Database['public']['Tables']['documents']['Row']
+export type ManagedContentType = 'articles' | 'events' | 'photos' | 'videos' | 'documents'
 
 export function slugify(value: string) {
   return value
@@ -98,17 +99,34 @@ export async function getPublishedVideos(limit?: number): Promise<Video[]> {
   return data ?? []
 }
 
+export async function getPublishedDocuments(limit?: number): Promise<Document[]> {
+  if (!hasSupabaseEnv()) return []
+  const supabase = await createClient()
+  let query = supabase
+    .from('documents')
+    .select('*')
+    .eq('status', 'published')
+    .order('sort_order', { ascending: true })
+    .order('published_at', { ascending: false, nullsFirst: false })
+
+  if (limit) query = query.limit(limit)
+
+  const { data } = await query
+  return data ?? []
+}
+
 export async function getAuthorContent(userId: string) {
   if (!hasSupabaseEnv()) {
-    return { articles: [], events: [], photos: [], videos: [] }
+    return { articles: [], events: [], photos: [], videos: [], documents: [] }
   }
 
   const supabase = await createClient()
-  const [articles, events, photos, videos] = await Promise.all([
+  const [articles, events, photos, videos, documents] = await Promise.all([
     supabase.from('articles').select('*').eq('author_id', userId).order('created_at', { ascending: false }).limit(8),
     supabase.from('events').select('*').eq('author_id', userId).order('created_at', { ascending: false }).limit(8),
     supabase.from('photos').select('*').eq('author_id', userId).order('created_at', { ascending: false }).limit(8),
     supabase.from('videos').select('*').eq('author_id', userId).order('created_at', { ascending: false }).limit(8),
+    supabase.from('documents').select('*').eq('author_id', userId).order('created_at', { ascending: false }).limit(8),
   ])
 
   return {
@@ -116,12 +134,13 @@ export async function getAuthorContent(userId: string) {
     events: events.data ?? [],
     photos: photos.data ?? [],
     videos: videos.data ?? [],
+    documents: documents.data ?? [],
   }
 }
 
 export async function getManagedContent(userId: string, isAdmin: boolean) {
   if (!hasSupabaseEnv()) {
-    return { articles: [], events: [], photos: [], videos: [] }
+    return { articles: [], events: [], photos: [], videos: [], documents: [] }
   }
 
   const supabase = await createClient()
@@ -130,19 +149,22 @@ export async function getManagedContent(userId: string, isAdmin: boolean) {
   const eventsQuery = supabase.from('events').select('*').order('created_at', { ascending: false }).limit(20)
   const photosQuery = supabase.from('photos').select('*').order('created_at', { ascending: false }).limit(20)
   const videosQuery = supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(20)
+  const documentsQuery = supabase.from('documents').select('*').order('created_at', { ascending: false }).limit(20)
 
   if (!isAdmin) {
     articlesQuery.eq('author_id', userId)
     eventsQuery.eq('author_id', userId)
     photosQuery.eq('author_id', userId)
     videosQuery.eq('author_id', userId)
+    documentsQuery.eq('author_id', userId)
   }
 
-  const [articles, events, photos, videos] = await Promise.all([
+  const [articles, events, photos, videos, documents] = await Promise.all([
     articlesQuery,
     eventsQuery,
     photosQuery,
     videosQuery,
+    documentsQuery,
   ])
 
   return {
@@ -150,5 +172,6 @@ export async function getManagedContent(userId: string, isAdmin: boolean) {
     events: events.data ?? [],
     photos: photos.data ?? [],
     videos: videos.data ?? [],
+    documents: documents.data ?? [],
   }
 }

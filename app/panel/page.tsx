@@ -37,6 +37,7 @@ const tableLabels = {
   events: 'Eventos',
   photos: 'Fotos',
   videos: 'Videos',
+  documents: 'PDFs',
 }
 
 export default async function PanelPage({
@@ -104,7 +105,7 @@ export default async function PanelPage({
                 <p className="mt-2 text-sm text-slate-600">
                   {isAdmin
                     ? 'Como administrador puedes publicar, despublicar y eliminar contenido de cualquier autor.'
-                    : 'Puedes publicar, despublicar y eliminar los eventos, fotos y videos que hayas subido.'}
+                    : 'Puedes publicar, despublicar y eliminar los eventos, fotos, videos y PDFs que hayas subido.'}
                 </p>
               </div>
 
@@ -113,6 +114,7 @@ export default async function PanelPage({
                 <ContentTable table="events" items={content.events} canDelete />
                 <ContentTable table="photos" items={content.photos} canDelete />
                 <ContentTable table="videos" items={content.videos} canDelete />
+                <ContentTable table="documents" items={content.documents} canDelete />
               </div>
             </section>
           </main>
@@ -201,6 +203,7 @@ function CreateContentForm() {
               <option value="event">Evento</option>
               <option value="photo">Foto</option>
               <option value="video">Video</option>
+              <option value="document">PDF</option>
             </select>
           </label>
           <label className="block text-sm font-medium text-slate-700">
@@ -223,7 +226,7 @@ function CreateContentForm() {
         </div>
 
         <FileField label="Imagen de portada" name="cover" accept="image/*" />
-        <FileField label="Archivo de foto/video" name="media" accept="image/*,video/*" />
+        <FileField label="Archivo de foto/video/PDF" name="media" accept="image/*,video/*,application/pdf,.pdf" />
         <TextField label="Enlace de video externo" name="video_url" type="url" />
         <TextField label="Texto alternativo para foto" name="alt_text" />
 
@@ -240,7 +243,7 @@ function ContentTable({
   items,
   canDelete,
 }: {
-  table: 'articles' | 'events' | 'photos' | 'videos'
+  table: 'articles' | 'events' | 'photos' | 'videos' | 'documents'
   items: ContentItem[]
   canDelete: boolean
 }) {

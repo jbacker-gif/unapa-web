@@ -77,6 +77,38 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['events']['Insert']>
       }
+      documents: {
+        Row: {
+          author_id: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_url: string
+          id: string
+          mime_type: string
+          published_at: string | null
+          sort_order: number
+          status: string
+          storage_path: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          category_id?: string | null
+          description?: string | null
+          file_name?: string | null
+          file_url: string
+          mime_type?: string
+          published_at?: string | null
+          sort_order?: number
+          status?: string
+          storage_path?: string | null
+          title: string
+        }
+        Update: Partial<Database['public']['Tables']['documents']['Insert']>
+      }
       media_categories: {
         Row: {
           created_at: string

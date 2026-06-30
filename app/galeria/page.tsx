@@ -1,15 +1,19 @@
 import EmptyState from '@/components/EmptyState'
-import { getPublishedPhotos, getPublishedVideos } from '@/lib/content'
+import { getPublishedDocuments, getPublishedPhotos, getPublishedVideos } from '@/lib/content'
 import Image from 'next/image'
 
 export default async function GaleriaPage() {
-  const [photos, videos] = await Promise.all([getPublishedPhotos(), getPublishedVideos()])
+  const [photos, videos, documents] = await Promise.all([
+    getPublishedPhotos(),
+    getPublishedVideos(),
+    getPublishedDocuments(),
+  ])
 
   return (
     <div className="bg-slate-50 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 max-w-3xl">
-          <h1 className="text-4xl font-extrabold text-blue-900">Galería de fotos y videos</h1>
+          <h1 className="text-4xl font-extrabold text-blue-900">Galería de fotos, videos y PDFs</h1>
           <p className="mt-4 text-lg text-slate-600">
             Memoria visual de eventos, actividades institucionales y contenido multimedia de UNAPA.
           </p>
@@ -68,6 +72,34 @@ export default async function GaleriaPage() {
                       Ver video
                     </a>
                   )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-16">
+          <h2 className="mb-6 text-2xl font-bold text-slate-900">PDFs</h2>
+          {documents.length === 0 ? (
+            <EmptyState
+              title="Aún no hay PDFs publicados"
+              text="Los documentos PDF cargados por autores aparecerán en esta sección."
+            />
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2">
+              {documents.map((document) => (
+                <article key={document.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">PDF</p>
+                  <h3 className="mt-2 text-xl font-bold text-slate-900">{document.title}</h3>
+                  {document.description && <p className="mt-2 text-sm text-slate-600">{document.description}</p>}
+                  <a
+                    href={document.file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex rounded-md bg-blue-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-800"
+                  >
+                    Abrir PDF
+                  </a>
                 </article>
               ))}
             </div>

@@ -6,8 +6,8 @@ import { slugify } from '@/lib/content'
 import { hasSupabaseEnv } from '@/lib/supabase/env'
 import { createClient } from '@/lib/supabase/server'
 
-type ContentType = 'article' | 'event' | 'photo' | 'video'
-type ManagedContentType = 'articles' | 'events' | 'photos' | 'videos'
+type ContentType = 'article' | 'event' | 'photo' | 'video' | 'document'
+type ManagedContentType = 'articles' | 'events' | 'photos' | 'videos' | 'documents'
 type AuthorProfile = {
   id: string
   role: string
@@ -179,6 +179,30 @@ export async function createContent(formData: FormData) {
     if (error) redirect('/panel?error=save')
   }
 
+  if (type === 'document') {
+    const pdf = getFile(formData, 'media')
+
+    if (!pdf || pdf.size === 0 || pdf.type !== 'application/pdf') redirect('/panel?error=media')
+
+    const uploaded = await uploadMedia(pdf, 'documents', user.id)
+
+    if (!uploaded.publicUrl) redirect('/panel?error=media')
+
+    const { error } = await supabase.from('documents').insert({
+      author_id: user.id,
+      description: String(formData.get('description') ?? '').trim() || null,
+      file_name: pdf.name,
+      file_url: uploaded.publicUrl,
+      mime_type: pdf.type,
+      published_at: publishedAt(status),
+      status,
+      storage_path: uploaded.path,
+      title,
+    })
+
+    if (error) redirect('/panel?error=save')
+  }
+
   contentPaths()
   redirect('/panel?saved=1')
 }
@@ -228,7 +252,7 @@ export async function updateContentStatus(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   const status = String(formData.get('status') ?? '')
 
-  if (!['articles', 'events', 'photos', 'videos'].includes(table) || !id || !['draft', 'published'].includes(status)) {
+  if (!['articles', 'events', 'photos', 'videos', 'documents'].includes(table) || !id || !['draft', 'published'].includes(status)) {
     redirectWithPanelError('invalid')
   }
 
@@ -251,7 +275,7 @@ export async function deleteContent(formData: FormData) {
   const table = String(formData.get('table') ?? '') as ManagedContentType
   const id = String(formData.get('id') ?? '')
 
-  if (!['events', 'photos', 'videos'].includes(table) || !id) {
+  if (!['events', 'photos', 'videos', 'documents'].includes(table) || !id) {
     redirectWithPanelError('invalid')
   }
 
