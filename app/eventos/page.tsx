@@ -27,6 +27,7 @@ export default async function EventosPage() {
                 key={event.id}
                 title={event.title}
                 description={event.description}
+                href={`/eventos/${event.slug}`}
                 imageUrl={event.cover_image_url}
                 date={event.starts_at}
                 dateTime

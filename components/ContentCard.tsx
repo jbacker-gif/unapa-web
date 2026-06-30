@@ -25,23 +25,44 @@ export default function ContentCard({
   attachmentUrl,
   attachmentLabel,
 }: CardProps) {
-  const content = (
+  const media = imageUrl ? (
+    <div className="aspect-[16/9] bg-slate-100">
+      <Image src={imageUrl} alt={title} width={640} height={360} className="h-full w-full object-cover" />
+    </div>
+  ) : (
+    <div className="aspect-[16/9] bg-blue-900" />
+  )
+
+  const details = (
+    <>
+      {(date || meta) && (
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-600">
+          {date ? (dateTime ? formatDateTime(date) : formatDate(date)) : meta}
+        </p>
+      )}
+      <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+      {description && <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>}
+      {href && <p className="mt-4 text-sm font-bold text-blue-900">Leer más</p>}
+    </>
+  )
+
+  return (
     <article className="h-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      {imageUrl ? (
-        <div className="aspect-[16/9] bg-slate-100">
-          <Image src={imageUrl} alt={title} width={640} height={360} className="h-full w-full object-cover" />
-        </div>
+      {href ? (
+        <Link href={href} className="block">
+          {media}
+        </Link>
       ) : (
-        <div className="aspect-[16/9] bg-blue-900" />
+        media
       )}
       <div className="p-5">
-        {(date || meta) && (
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-600">
-            {date ? (dateTime ? formatDateTime(date) : formatDate(date)) : meta}
-          </p>
+        {href ? (
+          <Link href={href} className="block">
+            {details}
+          </Link>
+        ) : (
+          details
         )}
-        <h2 className="text-xl font-bold text-slate-900">{title}</h2>
-        {description && <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>}
         {attachmentUrl && (
           <a
             href={attachmentUrl}
@@ -54,13 +75,5 @@ export default function ContentCard({
         )}
       </div>
     </article>
-  )
-
-  if (!href) return content
-
-  return (
-    <Link href={href} className="block h-full">
-      {content}
-    </Link>
   )
 }

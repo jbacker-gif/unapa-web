@@ -52,6 +52,19 @@ export async function getPublishedArticles(limit?: number): Promise<Article[]> {
   return data ?? []
 }
 
+export async function getPublishedArticleBySlug(slug: string): Promise<Article | null> {
+  if (!hasSupabaseEnv()) return null
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .maybeSingle()
+
+  return data
+}
+
 export async function getPublishedEvents(limit?: number): Promise<Event[]> {
   if (!hasSupabaseEnv()) return []
   const supabase = await createClient()
@@ -65,6 +78,19 @@ export async function getPublishedEvents(limit?: number): Promise<Event[]> {
 
   const { data } = await query
   return data ?? []
+}
+
+export async function getPublishedEventBySlug(slug: string): Promise<Event | null> {
+  if (!hasSupabaseEnv()) return null
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('events')
+    .select('*')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .maybeSingle()
+
+  return data
 }
 
 export async function getPublishedPhotos(limit?: number): Promise<Photo[]> {

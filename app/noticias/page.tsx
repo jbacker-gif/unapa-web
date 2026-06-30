@@ -27,6 +27,7 @@ export default async function NoticiasPage() {
                 key={article.id}
                 title={article.title}
                 description={article.excerpt}
+                href={`/noticias/${article.slug}`}
                 imageUrl={article.cover_image_url}
                 date={article.published_at ?? article.created_at}
                 meta={article.author_name}
