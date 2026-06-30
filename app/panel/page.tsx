@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { logout } from '@/app/login/actions'
 import { createContent, deleteContent, updateContentStatus, updatePassword, updateProfile } from './actions'
 import { formatDateTime, getManagedContent } from '@/lib/content'
@@ -275,6 +276,14 @@ function ContentTable({
                   <td className="px-4 py-3 text-slate-600">{formatDateTime(item.published_at ?? item.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
+                      {(table === 'articles' || table === 'events') && (
+                        <Link
+                          href={`/panel/${table}/${item.id}/editar`}
+                          className="rounded-md border border-slate-300 px-3 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Editar
+                        </Link>
+                      )}
                       <form action={updateContentStatus}>
                         <input type="hidden" name="table" value={table} />
                         <input type="hidden" name="id" value={item.id} />

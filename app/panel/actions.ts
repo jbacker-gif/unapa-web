@@ -81,7 +81,7 @@ async function uploadPdfAttachment(file: File | null, folder: string, userId: st
   return { ...media, fileName: file.name }
 }
 
-function redirectWithPanelError(error: string) {
+function redirectWithPanelError(error: string): never {
   redirect(`/panel?error=${error}`)
 }
 
@@ -91,6 +91,17 @@ function contentPaths() {
   revalidatePath('/eventos')
   revalidatePath('/galeria')
   revalidatePath('/panel')
+}
+
+function validStatus(status: string) {
+  return ['draft', 'published'].includes(status)
+}
+
+async function getCurrentPublishDate(table: 'articles' | 'events', id: string) {
+  const { supabase } = await requireAuthor()
+  const { data } = await supabase.from(table).select('published_at').eq('id', id).maybeSingle()
+
+  return data?.published_at ?? null
 }
 
 export async function createContent(formData: FormData) {
@@ -248,6 +259,95 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath('/panel')
   redirect('/panel?profile=1')
+}
+
+export async function updateArticleContent(formData: FormData) {
+  const { supabase, user } = await requireAuthor()
+  const id = String(formData.get('id') ?? '')
+  const title = String(formData.get('title') ?? '').trim()
+  const status = String(formData.get('status') ?? 'draft')
+  const body = String(formData.get('body') ?? '').trim()
+  const excerpt = String(formData.get('excerpt') ?? '').trim()
+
+  if (!id || !title || !body || !validStatus(status)) {
+    redirectWithPanelError('invalid')
+  }
+
+  const published_at = status === 'published' ? (await getCurrentPublishDate('articles', id)) ?? new Date().toISOString() : null
+  const cover = await uploadMedia(getFile(formData, 'cover'), 'articles', user.id)
+  const attachment = await uploadPdfAttachment(getFile(formData, 'attachment_pdf'), 'article-documents', user.id)
+
+  const updates: Record<string, string | null> = {
+    body,
+    excerpt: excerpt || null,
+    published_at,
+    status,
+    title,
+  }
+
+  if (cover.publicUrl) {
+    updates.cover_image_url = cover.publicUrl
+    updates.cover_storage_path = cover.path
+  }
+
+  if (attachment.publicUrl) {
+    updates.attachment_pdf_file_name = attachment.fileName
+    updates.attachment_pdf_storage_path = attachment.path
+    updates.attachment_pdf_url = attachment.publicUrl
+  }
+
+  const { data, error } = await supabase.from('articles').update(updates).eq('id', id).select('slug').maybeSingle()
+
+  if (error || !data) redirectWithPanelError('save')
+
+  contentPaths()
+  revalidatePath(`/noticias/${data.slug}`)
+  redirect('/panel?updated=1')
+}
+
+export async function updateEventContent(formData: FormData) {
+  const { supabase, user } = await requireAuthor()
+  const id = String(formData.get('id') ?? '')
+  const title = String(formData.get('title') ?? '').trim()
+  const status = String(formData.get('status') ?? 'draft')
+  const startsAt = String(formData.get('starts_at') ?? '')
+
+  if (!id || !title || !validStatus(status)) {
+    redirectWithPanelError('invalid')
+  }
+
+  const published_at = status === 'published' ? (await getCurrentPublishDate('events', id)) ?? new Date().toISOString() : null
+  const cover = await uploadMedia(getFile(formData, 'cover'), 'events', user.id)
+  const attachment = await uploadPdfAttachment(getFile(formData, 'attachment_pdf'), 'event-documents', user.id)
+
+  const updates: Record<string, string | null> = {
+    body: String(formData.get('body') ?? '').trim() || null,
+    description: String(formData.get('description') ?? '').trim() || null,
+    location: String(formData.get('location') ?? '').trim() || null,
+    published_at,
+    starts_at: startsAt ? new Date(startsAt).toISOString() : new Date().toISOString(),
+    status,
+    title,
+  }
+
+  if (cover.publicUrl) {
+    updates.cover_image_url = cover.publicUrl
+    updates.cover_storage_path = cover.path
+  }
+
+  if (attachment.publicUrl) {
+    updates.attachment_pdf_file_name = attachment.fileName
+    updates.attachment_pdf_storage_path = attachment.path
+    updates.attachment_pdf_url = attachment.publicUrl
+  }
+
+  const { data, error } = await supabase.from('events').update(updates).eq('id', id).select('slug').maybeSingle()
+
+  if (error || !data) redirectWithPanelError('save')
+
+  contentPaths()
+  revalidatePath(`/eventos/${data.slug}`)
+  redirect('/panel?updated=1')
 }
 
 export async function updatePassword(formData: FormData) {
