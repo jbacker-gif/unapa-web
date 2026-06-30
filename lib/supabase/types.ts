@@ -13,6 +13,9 @@ export type Database = {
         Row: {
           author_id: string | null
           author_name: string | null
+          attachment_pdf_file_name: string | null
+          attachment_pdf_storage_path: string | null
+          attachment_pdf_url: string | null
           body: string
           category_id: string | null
           cover_image_url: string | null
@@ -29,6 +32,9 @@ export type Database = {
         Insert: {
           author_id?: string | null
           author_name?: string | null
+          attachment_pdf_file_name?: string | null
+          attachment_pdf_storage_path?: string | null
+          attachment_pdf_url?: string | null
           body: string
           category_id?: string | null
           cover_image_url?: string | null
@@ -44,6 +50,9 @@ export type Database = {
       events: {
         Row: {
           author_id: string | null
+          attachment_pdf_file_name: string | null
+          attachment_pdf_storage_path: string | null
+          attachment_pdf_url: string | null
           body: string | null
           category_id: string | null
           cover_image_url: string | null
@@ -62,6 +71,9 @@ export type Database = {
         }
         Insert: {
           author_id?: string | null
+          attachment_pdf_file_name?: string | null
+          attachment_pdf_storage_path?: string | null
+          attachment_pdf_url?: string | null
           body?: string | null
           category_id?: string | null
           cover_image_url?: string | null

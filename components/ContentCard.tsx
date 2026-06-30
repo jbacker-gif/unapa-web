@@ -10,6 +10,8 @@ type CardProps = {
   date?: string | null
   dateTime?: boolean
   meta?: string | null
+  attachmentUrl?: string | null
+  attachmentLabel?: string | null
 }
 
 export default function ContentCard({
@@ -20,6 +22,8 @@ export default function ContentCard({
   date,
   dateTime,
   meta,
+  attachmentUrl,
+  attachmentLabel,
 }: CardProps) {
   const content = (
     <article className="h-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -38,6 +42,16 @@ export default function ContentCard({
         )}
         <h2 className="text-xl font-bold text-slate-900">{title}</h2>
         {description && <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>}
+        {attachmentUrl && (
+          <a
+            href={attachmentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex rounded-md border border-blue-200 px-3 py-2 text-sm font-bold text-blue-900 transition hover:bg-blue-50"
+          >
+            {attachmentLabel ?? 'Ver PDF anexo'}
+          </a>
+        )}
       </div>
     </article>
   )

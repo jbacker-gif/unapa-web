@@ -31,6 +31,8 @@ export default async function EventosPage() {
                 date={event.starts_at}
                 dateTime
                 meta={event.location}
+                attachmentUrl={event.attachment_pdf_url}
+                attachmentLabel={event.attachment_pdf_file_name ?? 'Ver PDF anexo'}
               />
             ))}
           </div>

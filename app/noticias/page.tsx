@@ -30,6 +30,8 @@ export default async function NoticiasPage() {
                 imageUrl={article.cover_image_url}
                 date={article.published_at ?? article.created_at}
                 meta={article.author_name}
+                attachmentUrl={article.attachment_pdf_url}
+                attachmentLabel={article.attachment_pdf_file_name ?? 'Ver PDF anexo'}
               />
             ))}
           </div>
