@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { logout } from '@/app/login/actions'
 import { createContent, deleteContent, updateContentStatus, updatePassword, updateProfile } from './actions'
+import DocumentUploadForm from './DocumentUploadForm'
 import { formatDateTime, getManagedContent } from '@/lib/content'
 import { hasSupabaseEnv } from '@/lib/supabase/env'
 import { createClient } from '@/lib/supabase/server'
@@ -96,6 +97,7 @@ export default async function PanelPage({
           </aside>
 
           <main className="space-y-8">
+            <DocumentUploadForm userId={user.id} />
             <CreateContentForm />
             <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6">
@@ -203,7 +205,6 @@ function CreateContentForm() {
               <option value="event">Evento</option>
               <option value="photo">Foto</option>
               <option value="video">Video</option>
-              <option value="document">PDF</option>
             </select>
           </label>
           <label className="block text-sm font-medium text-slate-700">
@@ -226,7 +227,7 @@ function CreateContentForm() {
         </div>
 
         <FileField label="Imagen de portada" name="cover" accept="image/*" />
-        <FileField label="Archivo de foto/video/PDF" name="media" accept="image/*,video/*,application/pdf,.pdf" />
+        <FileField label="Archivo de foto/video" name="media" accept="image/*,video/*" />
         <TextField label="Enlace de video externo" name="video_url" type="url" />
         <TextField label="Texto alternativo para foto" name="alt_text" />
 

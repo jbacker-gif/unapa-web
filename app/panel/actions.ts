@@ -69,6 +69,10 @@ function getFile(formData: FormData, name: string) {
   return value instanceof File ? value : null
 }
 
+function isPdfFile(fileName: string, mimeType: string) {
+  return mimeType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf')
+}
+
 function redirectWithPanelError(error: string) {
   redirect(`/panel?error=${error}`)
 }
@@ -202,6 +206,45 @@ export async function createContent(formData: FormData) {
 
     if (error) redirect('/panel?error=save')
   }
+
+  contentPaths()
+  redirect('/panel?saved=1')
+}
+
+export async function createDocumentFromUpload(formData: FormData) {
+  const { supabase, user } = await requireAuthor()
+  const title = String(formData.get('title') ?? '').trim()
+  const status = String(formData.get('status') ?? 'draft')
+  const storagePath = String(formData.get('storage_path') ?? '').trim()
+  const fileName = String(formData.get('file_name') ?? '').trim()
+  const mimeType = String(formData.get('mime_type') ?? 'application/pdf').trim() || 'application/pdf'
+
+  if (
+    !title ||
+    !storagePath ||
+    !fileName ||
+    !['draft', 'published'].includes(status) ||
+    !storagePath.startsWith(`documents/${user.id}/`) ||
+    !isPdfFile(fileName, mimeType)
+  ) {
+    redirect('/panel?error=media')
+  }
+
+  const { data } = supabase.storage.from('unapa-media').getPublicUrl(storagePath)
+
+  const { error } = await supabase.from('documents').insert({
+    author_id: user.id,
+    description: String(formData.get('description') ?? '').trim() || null,
+    file_name: fileName,
+    file_url: data.publicUrl,
+    mime_type: 'application/pdf',
+    published_at: publishedAt(status),
+    status,
+    storage_path: storagePath,
+    title,
+  })
+
+  if (error) redirect('/panel?error=save')
 
   contentPaths()
   redirect('/panel?saved=1')
